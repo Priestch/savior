@@ -7,7 +7,7 @@
 // @author       Priestch
 // @match        https://gitpd.paodingai.com/*/issues/*
 // @grant        none
-// @downloadURL  https://github.com/Priestch/savior/blob/master/src/index.js 
+// @downloadURL  https://github.com/Priestch/savior/blob/master/src/index.js
 // ==/UserScript==
 
 (function () {
