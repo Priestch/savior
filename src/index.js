@@ -1,11 +1,13 @@
 // ==UserScript==
 // @name         Gitlab Issues Track
 // @namespace    http://tampermonkey.net/
+// @homepage     https://github.com/Priestch/savior
 // @version      0.1
-// @description  try to take over the world!
-// @author       You
+// @description  Savior of bug track in Gitlab issue!
+// @author       Priestch
 // @match        https://gitpd.paodingai.com/*/issues/*
 // @grant        none
+// @downloadURL  https://github.com/Priestch/savior/blob/master/src/index.js 
 // ==/UserScript==
 
 (function () {
