@@ -13,9 +13,51 @@
 (function () {
   'use strict';
 
+  function exportToCsv(filename, rows) {
+    const processRow = function (row) {
+      let finalVal = '';
+      for (let j = 0; j < row.length; j++) {
+        let innerValue = row[j] === null ? '' : row[j].toString();
+        if (row[j] instanceof Date) {
+          innerValue = row[j].toLocaleString();
+        }
+        let result = innerValue.replace(/"/g, '""');
+        if (result.search(/("|,|\n)/g) >= 0)
+          result = '"' + result + '"';
+        if (j > 0)
+          finalVal += ',';
+        finalVal += result;
+      }
+      return finalVal + '\n';
+    };
+
+    let csvFile = '';
+    for (let i = 0; i < rows.length; i++) {
+      csvFile += processRow(rows[i]);
+    }
+
+    const blob = new Blob([csvFile], { type: 'text/csv;charset=utf-8;' });
+    if (navigator.msSaveBlob) { // IE 10+
+      navigator.msSaveBlob(blob, filename);
+    } else {
+      const link = document.createElement('a');
+      if (link.download !== undefined) { // feature detection
+        // Browsers that support HTML5 download attribute
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        // link.style.visibility = 'hidden';
+        // document.body.appendChild(link);
+        link.click();
+        // document.body.removeChild(link);
+      }
+    }
+  }
+
+
   function formatTask(task) {
     return [
-      'author=> ' + task.authorName,
+      'author=> ' + task.author,
       'checked=> ' + task.checked,
       'priority=> ' + task.priority,
       'link=> ' + task.link,
@@ -59,53 +101,49 @@
     }
   }
 
-  function collapseGitlabNotes(collapseComment = true) {
+  function collectTasks() {
     const noteList = document.querySelectorAll('#notes-list .note');
     const filtered = Array.from(noteList).filter((item) => item.querySelector('.timeline-entry-inner .timeline-content'));
-    const taskResult = [];
+    const tasks = [];
     filtered.forEach((item) => {
       const timelineContent = item.querySelector('.timeline-entry-inner .timeline-content');
-      const tasks = timelineContent.querySelectorAll('.note-body .task-list');
+      const taskDomList = timelineContent.querySelectorAll('.note-body .task-list');
       const task = {
-        authorName: '',
+        author: '',
         link: '',
         checked: false,
+        description: '',
         priority: 'C',
+        domWrapper: item,
+        id: ''
       };
-      if (tasks.length > 0) {
-        task.authorName = timelineContent.querySelector('.note-header .note-header-author-name').textContent;
+      if (taskDomList.length > 0) {
+        task.author = timelineContent.querySelector('.note-header .note-header-author-name').textContent;
         const actions = timelineContent.querySelector('.note-header .note-actions .more-actions-dropdown');
 
         const actionList = actions.querySelectorAll('li .js-btn-copy-note-link');
         task.link = actionList[0].dataset.clipboardText;
-        if (tasks.length > 1) {
+        if (taskDomList.length > 1) {
           console.error(formatTask(task));
         }
-        const taskItem = tasks[0].querySelector('.task-list-item');
+        const taskItem = taskDomList[0].querySelector('.task-list-item');
         const taskInput = taskItem.querySelector('input');
         task.checked = taskInput.checked;
+        task.description = taskItem.textContent.trim();
+        const idMatchResult = task.description.match(/^(\d+)\.?/)
+        if (idMatchResult) {
+          task.id = idMatchResult[1];
+          task.description = task.description.replace(/^(\d+)\./, '').trim();
+        }
         const priorityPattern = /([ABC]).*bug/;
         const matchResult = timelineContent.querySelector('.note-body').textContent.match(priorityPattern);
         if (matchResult) {
           task.priority = matchResult[1];
         }
-        if (task.checked) {
-          if (!collapseComment) {
-            return;
-          }
-          item.classList.add('callapse-item');
-          item.style.height = '150px';
-          item.style.backgroundColor = '#67c23a';
-          item.style.overflow = 'hidden';
-        } else {
-          if (task.priority === 'A') {
-            item.style.backgroundColor = '#f56c6c';
-          }
-        }
-        taskResult.push(task);
+        tasks.push(task);
       }
     });
-    taskResult.sort(function (a, b) {
+    tasks.sort(function (a, b) {
       if (a.priority < b.priority) {
         return -1;
       }
@@ -114,9 +152,21 @@
       }
       return 0;
     });
+    return tasks;
+  }
 
-    generateReport(taskResult);
-    return taskResult;
+  function collapseGitlabNotes() {
+    const tasks = collectTasks();
+    for (let i = 0; i < tasks.length; i++) {
+      const task = tasks[i];
+      if (task.checked) {
+        task.domWrapper.classList.add('collapse-item')
+      } else {
+        if (task.priority === 'A') {
+          task.domWrapper.classList.add('highest-level-bug')
+        }
+      }
+    }
   }
 
   function createMenuItem(content, title, handler) {
@@ -127,8 +177,42 @@
     return button
   }
 
+  function padStart(string, length, pad) {
+    const s = String(string);
+    if (!s || s.length >= length) return string;
+    return `${Array((length + 1) - s.length).join(pad)}${string}`;
+  }
+
+  function parseProject() {
+    let prefix = window.location.protocol + '//' + window.location.hostname + '/cheftin/';
+    return window.location.href.replace(prefix, '').split('/')[0];
+  }
+
+  function generateFilename() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = padStart(now.getMonth() + 1, 2, '0');
+    const day = padStart(`${now.getDate()}`, 2, '0');
+    return `${year}_${month}_${day}_${parseProject()}.csv`
+  }
+
   function exportAsCSV() {
-    console.log('exportAsCSV');
+    const tasks = collectTasks(false);
+    console.log(tasks);
+    const rows = [];
+    const keys = ['id', 'description', 'checked', 'priority', 'author', 'link'];  // from task key
+    rows.push(keys);
+    for (let i = 0; i < tasks.length; i++) {
+      const task = tasks[i];
+      const row = [];
+      for (let j = 0; j < keys.length; j++) {
+        const key = keys[j];
+        row.push(task[key]);
+      }
+      rows.push(row);
+    }
+    let filename = generateFilename();
+    exportToCsv(filename, rows)
   }
 
   function createMenu() {
@@ -149,6 +233,16 @@
   }
 
   GM_addStyle(`
+  .notes .note.collapse-item:not(.highest-level-bug) {
+    height: 150px;
+    background-color: #67c23a;
+    overflow: hidden;
+  }
+  
+  .notes-list .note.highest-level-bug {
+    background: #f56c6c;
+  }
+  
   .detail-page-description.savior {
     position: relative;
     border-top-right-radius: 5px;
