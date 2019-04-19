@@ -46,10 +46,7 @@
         const url = URL.createObjectURL(blob);
         link.setAttribute('href', url);
         link.setAttribute('download', filename);
-        // link.style.visibility = 'hidden';
-        // document.body.appendChild(link);
         link.click();
-        // document.body.removeChild(link);
       }
     }
   }
@@ -70,7 +67,8 @@
     });
   }
 
-  function generateReport(tasks) {
+  function generateBugReport() {
+    const tasks = collectTasks();
     const done = tasks.filter(function (task) {
       return task.checked;
     });
@@ -88,11 +86,13 @@
     const ALevel = filterTasksByPriority(left, 'A');
     const BLevel = filterTasksByPriority(left, 'B');
     const CLevel = filterTasksByPriority(left, 'C');
+    const DLevel = filterTasksByPriority(left, 'D');
 
     const leftReport = [
       'A=> ' + ALevel.length,
       'B=> ' + BLevel.length,
       'C=> ' + CLevel.length,
+      'D=> ' + DLevel.length,
     ].join('; ');
     console.log('Left:', leftReport);
 
@@ -101,48 +101,73 @@
     }
   }
 
+  function createTask(domWrapper) {
+    return {
+      author: '',
+      link: '',
+      checked: false,
+      description: '',
+      priority: 'C',
+      domWrapper,
+      id: '',
+    };
+  }
+
+  function parseTask(taskContainer) {
+    const timelineContent = taskContainer.querySelector('.timeline-entry-inner .timeline-content');
+    const commentWrapper = timelineContent.querySelector('.timeline-discussion-body');
+    const taskDomList = commentWrapper.querySelectorAll('.note-body .task-list');
+    if (taskDomList.length === 0) {
+      return null
+    }
+    const task = createTask(timelineContent);
+    task.author = timelineContent.querySelector('.note-header .note-header-author-name').textContent;
+    task.link = parseLink(timelineContent);
+    if (taskDomList.length > 1) {
+      console.error(formatTask(task));
+    }
+    const taskItem = taskDomList[0].querySelector('.task-list-item');
+    const taskInput = taskItem.querySelector('input');
+    task.checked = taskInput.checked;
+    task.description = taskInput.nextSibling.textContent.trim();
+    const idMatchResult = task.description.match(/^(\d+)\.?/);
+    if (idMatchResult) {
+      task.id = idMatchResult[1];
+      task.description = task.description.replace(/^(\d+)\./, '').trim();
+    }
+    const priorityPattern = /([ABCD]).*bug/;
+    const matchResult = commentWrapper.querySelector('.note-body').textContent.match(priorityPattern);
+    if (matchResult) {
+      task.priority = matchResult[1];
+    }
+    return task;
+  }
+
+  function parseLink(timelineContent) {
+    const actions = timelineContent.querySelector('.note-header .note-actions .more-actions-dropdown');
+    const actionList = actions.querySelectorAll('li .js-btn-copy-note-link');
+    return actionList[0].dataset.clipboardText
+  }
+
   function collectTasks() {
-    const noteList = document.querySelectorAll('#notes-list .note');
+    const noteList = document.querySelectorAll('#notes-list .note:not(.system-note)');
     const filtered = Array.from(noteList).filter((item) => item.querySelector('.timeline-entry-inner .timeline-content'));
     const tasks = [];
-    filtered.forEach((item) => {
-      const timelineContent = item.querySelector('.timeline-entry-inner .timeline-content');
-      const taskDomList = timelineContent.querySelectorAll('.note-body .task-list');
-      const task = {
-        author: '',
-        link: '',
-        checked: false,
-        description: '',
-        priority: 'C',
-        domWrapper: item,
-        id: ''
-      };
-      if (taskDomList.length > 0) {
-        task.author = timelineContent.querySelector('.note-header .note-header-author-name').textContent;
-        const actions = timelineContent.querySelector('.note-header .note-actions .more-actions-dropdown');
 
-        const actionList = actions.querySelectorAll('li .js-btn-copy-note-link');
-        task.link = actionList[0].dataset.clipboardText;
-        if (taskDomList.length > 1) {
-          console.error(formatTask(task));
+    for (let i = 0; i < filtered.length; i++) {
+      const taskContainer = filtered[i];
+      let task;
+      try {
+        task = parseTask(taskContainer);
+        if (task) {
+          tasks.push(task);
         }
-        const taskItem = taskDomList[0].querySelector('.task-list-item');
-        const taskInput = taskItem.querySelector('input');
-        task.checked = taskInput.checked;
-        task.description = taskItem.textContent.trim();
-        const idMatchResult = task.description.match(/^(\d+)\.?/)
-        if (idMatchResult) {
-          task.id = idMatchResult[1];
-          task.description = task.description.replace(/^(\d+)\./, '').trim();
-        }
-        const priorityPattern = /([ABC]).*bug/;
-        const matchResult = timelineContent.querySelector('.note-body').textContent.match(priorityPattern);
-        if (matchResult) {
-          task.priority = matchResult[1];
-        }
-        tasks.push(task);
+      } catch (e) {
+        console.error(e);
+        console.log('Error occurred when parseTask: ', taskContainer);
+        continue
       }
-    });
+    }
     tasks.sort(function (a, b) {
       if (a.priority < b.priority) {
         return -1;
@@ -197,7 +222,7 @@
   }
 
   function exportAsCSV() {
-    const tasks = collectTasks(false);
+    const tasks = collectTasks();
     console.log(tasks);
     const rows = [];
     const keys = ['id', 'description', 'checked', 'priority', 'author', 'link'];  // from task key
