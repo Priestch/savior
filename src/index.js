@@ -150,7 +150,7 @@
   }
 
   function collectTasks() {
-    const noteList = document.querySelectorAll('#notes-list .note:not(.system-note)');
+    const noteList = document.querySelectorAll('#notes-list > .note:not(.system-note)');
     const filtered = Array.from(noteList).filter((item) => item.querySelector('.timeline-entry-inner .timeline-content'));
     const tasks = [];
 
