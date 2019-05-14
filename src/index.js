@@ -177,10 +177,9 @@
       const task = tasks[i];
       if (task.checked) {
         task.domWrapper.classList.add('collapse-item')
-      } else {
-        if (task.priority === 'A') {
-          task.domWrapper.classList.add('highest-level-bug')
-        }
+      }
+      if (task.priority === 'A') {
+        task.domWrapper.classList.add('highest-level-bug');
       }
     }
   }
@@ -249,13 +248,17 @@
   }
 
   GM_addStyle(`
-  .notes .note.collapse-item:not(.highest-level-bug) {
-    height: 150px;
+  .notes .note .timeline-content.collapse-item {
+    height: 100px;
     background-color: #67c23a;
     overflow: hidden;
   }
   
-  .notes-list .note.highest-level-bug {
+  .notes .note .timeline-content.collapse-item * {
+    background-color: #67c23a;
+  }
+
+  .notes-list .note .timeline-content.highest-level-bug:not(.collapse-item) {
     background: #f56c6c;
   }
   
