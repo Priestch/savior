@@ -110,6 +110,8 @@
       priority: 'C',
       domWrapper,
       id: '',
+      replies: [],
+      confirmChecked: false
     };
   }
 
@@ -140,7 +142,16 @@
     if (matchResult) {
       task.priority = matchResult[1];
     }
+    addReplies(task);
+    if (confirmedByTestUser(task)) {
+      task.confirmChecked = true;
+    }
     return task;
+  }
+
+  function addReplies(task) {
+    let replyList = task.domWrapper.querySelectorAll('.replies-toggle ~ .timeline-entry.note.qa-noteable-note-item');
+    task.replies = Array.from(replyList).map(getReply);
   }
 
   function parseLink(timelineContent) {
@@ -171,11 +182,31 @@
     return tasks;
   }
 
+  function getReply(replayDom) {
+    let noteContentSelector = '.timeline-entry-inner .timeline-content .timeline-discussion-body .note-body .note-text';
+    let noteHeaderSelector = '.timeline-entry-inner .timeline-content .note-header';
+    let noteHeaderDom = replayDom.querySelector(noteHeaderSelector);
+    return {
+      author: noteHeaderDom.querySelector('.note-header-author-name').textContent,
+      content: replayDom.querySelector(noteContentSelector).textContent
+    }
+  }
+
+  function confirmedByTestUser(task) {
+    if (task.replies.length > 0) {
+      let lastIndex = task.replies.length - 1;
+      let reply = task.replies[lastIndex];
+      return reply.author === '王美丽' && reply.content === '验证已修复'
+    } else {
+      return false
+    }
+  }
+
   function collapseGitlabNotes() {
     const tasks = collectTasks();
     for (let i = 0; i < tasks.length; i++) {
       const task = tasks[i];
-      if (task.checked) {
+      if (task.checked || task.confirmChecked) {
         task.domWrapper.classList.add('collapse-item')
       }
       if (task.priority === 'A') {
@@ -222,7 +253,11 @@
       const row = [];
       for (let j = 0; j < keys.length; j++) {
         const key = keys[j];
-        row.push(task[key]);
+        if (key !== 'checked') {
+          row.push(task[key]);
+        } else {
+          row.push(task['checked'] || task['confirmChecked'])
+        }
       }
       rows.push(row);
     }
