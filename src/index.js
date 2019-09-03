@@ -215,6 +215,19 @@
     }
   }
 
+  function jumpToNote() {
+    navigator.clipboard.readText().then(clipText => {
+      if (clipText.startsWith('http')) {
+        let url = new URL(clipText);
+        if (url.hash) {
+          let noteID = url.hash.replace('#', '');
+          document.getElementById(noteID).scrollIntoView()
+        }
+      }
+    });
+
+  }
+
   function createMenuItem(content, title, handler) {
     let button = document.createElement('button');
     button.textContent = content;
@@ -274,6 +287,7 @@
     const menuItems = [
       createMenuItem('导出', '导出CSV', exportAsCSV),
       createMenuItem('折叠', '折叠评论', collapseGitlabNotes),
+      createMenuItem('跳转', '跳转至剪切版中的URL', jumpToNote),
     ];
     for (let i = 0; i < menuItems.length; i++) {
       const menuItem = menuItems[i];
