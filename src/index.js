@@ -216,13 +216,21 @@
   }
 
   function jumpToNote() {
+    let noteID = '';
     navigator.clipboard.readText().then(clipText => {
       if (clipText.startsWith('http')) {
         let url = new URL(clipText);
         if (url.hash) {
-          let noteID = url.hash.replace('#', '');
-          document.getElementById(noteID).scrollIntoView()
+          noteID = url.hash.replace('#', '');
         }
+      } else {
+        let result = window.location.hash.match(/#(note_\d+)/);
+        if (result) {
+          noteID = result[1]
+        }
+      }
+      if (noteID) {
+        document.getElementById(noteID).scrollIntoView()
       }
     });
 
