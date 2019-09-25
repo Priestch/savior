@@ -13,6 +13,8 @@
 (function () {
   'use strict';
 
+  const TEST_USERS = ['王美丽', '李亮'];
+
   function exportToCsv(filename, rows) {
     const processRow = function (row) {
       let finalVal = '';
@@ -196,7 +198,7 @@
     if (task.replies.length > 0) {
       let lastIndex = task.replies.length - 1;
       let reply = task.replies[lastIndex];
-      return reply.author === '王美丽' && reply.content === '验证已修复'
+      return TEST_USERS.includes(reply.author) && reply.content === '验证已修复'
     } else {
       return false
     }
