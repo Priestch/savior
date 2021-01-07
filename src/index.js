@@ -2,7 +2,7 @@
 // @name         Gitlab Issues Track
 // @namespace    http://tampermonkey.net/
 // @homepage     https://github.com/Priestch/savior
-// @version      0.2.7
+// @version      0.2.8
 // @description  Savior of bug track in Gitlab issue!
 // @author       Priestch
 // @match        https://gitpd.paodingai.com/*/issues/*
