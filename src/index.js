@@ -217,23 +217,27 @@
     }
   }
 
-  function jumpToNote() {
-    let noteID = '';
+  function scrollToNote(noteID) {
+    if (noteID) {
+      document.getElementById(noteID).scrollIntoView({ block: 'center' });
+    }
+  }
+
+  function scrollToNoteInURL(result) {
+    if (result) {
+      scrollToNote(result[1]);
+    }
+  }
+
+  function scrollToClipboardNote() {
     navigator.clipboard.readText().then(clipText => {
       if (clipText.startsWith('http')) {
-        let url = new URL(clipText);
-        if (url.hash) {
-          noteID = url.hash.replace('#', '');
-        }
-      } else {
-        let result = window.location.hash.match(/#(note_\d+)/);
-        if (result) {
-          noteID = result[1]
-        }
+      let url = new URL(clipText);
+      if (url.hash) {
+        const noteID = url.hash.replace('#', '');
+        scrollToNote(noteID);
       }
-      if (noteID) {
-        document.getElementById(noteID).scrollIntoView()
-      }
+    }
     });
 
   }
@@ -297,7 +301,7 @@
     const menuItems = [
       createMenuItem('导出', '导出CSV', exportAsCSV),
       createMenuItem('折叠', '折叠评论', collapseGitlabNotes),
-      createMenuItem('跳转', '跳转至剪切版中的URL', jumpToNote),
+      createMenuItem('跳转', '跳转至剪切版中的URL', scrollToClipboardNote),
     ];
     for (let i = 0; i < menuItems.length; i++) {
       const menuItem = menuItems[i];
@@ -355,4 +359,25 @@
   `);
 
   createMenu();
+
+  const URLMatchResult = window.location.hash.match(/#(note_\d+)/);
+  if (URLMatchResult) {
+    let timeoutID = null;
+    let observer;
+    function handleMutations(records) {
+      records.forEach((record) => {
+        if (timeoutID) {
+          clearTimeout(timeoutID);
+        }
+        setTimeout(function() {
+          scrollToNoteInURL(URLMatchResult);
+          observer.disconnect();
+        }, 1000);
+      });
+    }
+
+    observer = new MutationObserver(handleMutations);
+    const nodeList = document.querySelector('#notes-list')
+    observer.observe(nodeList, { subtree: true, childList: true, attributes: true });
+  }
 })();
