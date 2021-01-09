@@ -309,6 +309,7 @@
     }
     descContainer.appendChild(menuDom);
   }
+  const { right } = document.querySelector('.issue-details').getBoundingClientRect();
 
   GM_addStyle(`
   .notes .note .timeline-content.collapse-item {
@@ -333,9 +334,9 @@
   }
 
   .savior-menu {
-    top: 0;
-    right: -56px;
-    position: absolute;
+    top: 141px;
+    left: ${Math.ceil(right) + 20}px;
+    position: fixed;
     width: 46px;
     display: inline-flex;
     flex-direction: column;
