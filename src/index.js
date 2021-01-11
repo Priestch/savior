@@ -13,7 +13,7 @@
 (function () {
   'use strict';
 
-  const TEST_USERS = ['王美丽', '李亮'];
+  const TEST_USERS = ['王美丽', '焦隽峰'];
 
   function exportToCsv(filename, rows) {
     const processRow = function (row) {
@@ -239,6 +239,7 @@
       }
     }
     });
+  }
 
   }
 
@@ -294,7 +295,11 @@
 
   function createMenu() {
     const descContainer = document.querySelector('.detail-page-description');
-    descContainer.classList.add('savior');
+    const fixMenu = document.createElement('div');
+    fixMenu.classList.add("issue-sticky-header", "gl-fixed");
+
+    const saviorBox = document.createElement('div');
+    saviorBox.classList.add("issue-sticky-header-text", "gl-mx-auto", "savior");
 
     const menuDom = document.createElement('div');
     menuDom.classList.add('savior-menu');
@@ -307,9 +312,10 @@
       const menuItem = menuItems[i];
       menuDom.appendChild(menuItem);
     }
-    descContainer.appendChild(menuDom);
+    saviorBox.appendChild(menuDom);
+    fixMenu.appendChild(saviorBox);
+    descContainer.appendChild(fixMenu);
   }
-  const { right } = document.querySelector('.issue-details').getBoundingClientRect();
 
   GM_addStyle(`
   .notes .note .timeline-content.collapse-item {
@@ -326,17 +332,14 @@
     background: #f56c6c;
   }
   
-  .detail-page-description.savior {
+  .savior {
     position: relative;
-    border-top-right-radius: 5px;
-    border-bottom-right-radius: 5px;
-    border-right: 1px solid #eaeaea;
   }
 
   .savior-menu {
-    top: 141px;
-    left: ${Math.ceil(right) + 20}px;
-    position: fixed;
+    top: 56px;
+    left: 100%;
+    position: absolute;
     width: 46px;
     display: inline-flex;
     flex-direction: column;
