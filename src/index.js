@@ -2,7 +2,7 @@
 // @name         Gitlab Issues Track
 // @namespace    http://tampermonkey.net/
 // @homepage     https://github.com/Priestch/savior
-// @version      0.2.9
+// @version      0.3.1
 // @description  Savior of bug track in Gitlab issue!
 // @author       Priestch
 // @match        https://gitpd.paodingai.com/*/issues/*
@@ -13,7 +13,7 @@
 (function () {
   'use strict';
 
-  const TEST_USERS = ['王美丽', '李亮'];
+  const TEST_USERS = ['王美丽', '焦隽峰'];
 
   function exportToCsv(filename, rows) {
     const processRow = function (row) {
@@ -239,7 +239,13 @@
       }
     }
     });
+  }
 
+  function scrollToUrlNote(){
+    const URLNote = window.location.hash.match(/#(note_\d+)/);
+    if (URLNote) {
+      scrollToNoteInURL(URLNote);
+    }
   }
 
   function createMenuItem(content, title, handler) {
@@ -294,7 +300,11 @@
 
   function createMenu() {
     const descContainer = document.querySelector('.detail-page-description');
-    descContainer.classList.add('savior');
+    const fixMenu = document.createElement('div');
+    fixMenu.classList.add("issue-sticky-header", "gl-fixed");
+
+    const saviorBox = document.createElement('div');
+    saviorBox.classList.add("issue-sticky-header-text", "gl-mx-auto", "savior");
 
     const menuDom = document.createElement('div');
     menuDom.classList.add('savior-menu');
@@ -302,14 +312,16 @@
       createMenuItem('导出', '导出CSV', exportAsCSV),
       createMenuItem('折叠', '折叠评论', collapseGitlabNotes),
       createMenuItem('跳转', '跳转至剪切版中的URL', scrollToClipboardNote),
+      createMenuItem('Find', '跳转到URL锚点位置', scrollToUrlNote),
     ];
     for (let i = 0; i < menuItems.length; i++) {
       const menuItem = menuItems[i];
       menuDom.appendChild(menuItem);
     }
-    descContainer.appendChild(menuDom);
+    saviorBox.appendChild(menuDom);
+    fixMenu.appendChild(saviorBox);
+    descContainer.appendChild(fixMenu);
   }
-  const { right } = document.querySelector('.issue-details').getBoundingClientRect();
 
   GM_addStyle(`
   .notes .note .timeline-content.collapse-item {
@@ -326,17 +338,14 @@
     background: #f56c6c;
   }
   
-  .detail-page-description.savior {
+  .savior {
     position: relative;
-    border-top-right-radius: 5px;
-    border-bottom-right-radius: 5px;
-    border-right: 1px solid #eaeaea;
   }
 
   .savior-menu {
-    top: 141px;
-    left: ${Math.ceil(right) + 20}px;
-    position: fixed;
+    top: 56px;
+    left: 100%;
+    position: absolute;
     width: 46px;
     display: inline-flex;
     flex-direction: column;
@@ -373,7 +382,7 @@
         setTimeout(function() {
           scrollToNoteInURL(URLMatchResult);
           observer.disconnect();
-        }, 1000);
+        }, 2000);
       });
     }
 
