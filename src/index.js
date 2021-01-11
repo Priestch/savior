@@ -241,6 +241,11 @@
     });
   }
 
+  function scrollToUrlNote(){
+    const URLNote = window.location.hash.match(/#(note_\d+)/);
+    if (URLNote) {
+      scrollToNoteInURL(URLNote);
+    }
   }
 
   function createMenuItem(content, title, handler) {
@@ -307,6 +312,7 @@
       createMenuItem('导出', '导出CSV', exportAsCSV),
       createMenuItem('折叠', '折叠评论', collapseGitlabNotes),
       createMenuItem('跳转', '跳转至剪切版中的URL', scrollToClipboardNote),
+      createMenuItem('Find', '跳转到URL锚点位置', scrollToUrlNote),
     ];
     for (let i = 0; i < menuItems.length; i++) {
       const menuItem = menuItems[i];
@@ -376,7 +382,7 @@
         setTimeout(function() {
           scrollToNoteInURL(URLMatchResult);
           observer.disconnect();
-        }, 1000);
+        }, 2000);
       });
     }
 
