@@ -220,7 +220,11 @@
 
   function scrollToNote(noteID) {
     if (noteID) {
-      document.getElementById(noteID).scrollIntoView({ block: 'center' });
+      if (location.hash.slice(1) !== noteID) {
+        location.hash = "#" + noteID;
+      } else {
+        document.getElementById(noteID).scrollIntoView({ block: 'center' });
+      }
     }
   }
 
