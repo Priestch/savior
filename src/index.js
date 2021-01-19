@@ -381,8 +381,10 @@
           clearTimeout(timeoutID);
         }
         setTimeout(function() {
-          scrollToNoteInURL(URLMatchResult);
-          observer.disconnect();
+          requestAnimationFrame(() => {
+            scrollToNoteInURL(URLMatchResult);
+            observer.disconnect();
+          })
         }, MAX_CONTINUOUS_MUTATION_INTERVAL);
       });
     }
