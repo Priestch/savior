@@ -370,6 +370,7 @@
 
   createMenu();
 
+  const MAX_CONTINUOUS_MUTATION_INTERVAL = 5000;
   const URLMatchResult = window.location.hash.match(/#(note_\d+)/);
   if (URLMatchResult) {
     let timeoutID = null;
@@ -382,7 +383,7 @@
         setTimeout(function() {
           scrollToNoteInURL(URLMatchResult);
           observer.disconnect();
-        }, 2000);
+        }, MAX_CONTINUOUS_MUTATION_INTERVAL);
       });
     }
 
