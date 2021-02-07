@@ -19,7 +19,8 @@
     const processRow = function (row) {
       let finalVal = '';
       for (let j = 0; j < row.length; j++) {
-        let innerValue = row[j] === null ? '' : row[j].toString();
+        const isEmpty = row[j] === null || row[j] === undefined;
+        let innerValue = isEmpty ? '' : row[j].toString();
         if (row[j] instanceof Date) {
           innerValue = row[j].toLocaleString();
         }
