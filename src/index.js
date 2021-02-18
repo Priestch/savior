@@ -13,7 +13,7 @@
 (function () {
   'use strict';
 
-  const TEST_USERS = ['王美丽', '焦隽峰'];
+  const TEST_USERS = ['王美丽', '焦隽峰', '曾慧琴'];
 
   function exportToCsv(filename, rows) {
     const processRow = function (row) {
@@ -134,11 +134,11 @@
     const taskItem = taskDomList[0].querySelector('.task-list-item');
     const taskInput = taskItem.querySelector('input');
     task.checked = taskInput.checked;
-    task.description = taskInput.nextSibling.textContent.trim();
-    const idMatchResult = task.description.match(/^(\d+)\.?/);
+    task.description = taskItem.textContent.trim().replace(/\n/g, ' ');
+    const idMatchResult = task.description.match(/^(\d+)[.．、]?/);
     if (idMatchResult) {
       task.id = idMatchResult[1];
-      task.description = task.description.replace(/^(\d+)\./, '').trim();
+      task.description = task.description.replace(/^(\d+)[.．、]/, '').trim();
     }
     const priorityPattern = /([ABCD]).*bug/;
     const matchResult = commentWrapper.querySelector('.note-body').textContent.match(priorityPattern);
