@@ -2,7 +2,7 @@
 // @name         Gitlab Issues Track
 // @namespace    http://tampermonkey.net/
 // @homepage     https://github.com/Priestch/savior
-// @version      0.3.4
+// @version      0.3.6
 // @description  Savior of bug track in Gitlab issue!
 // @author       Priestch
 // @match        https://gitpd.paodingai.com/*/issues/*
@@ -13,7 +13,7 @@
 (function () {
   'use strict';
 
-  const TEST_USERS = ['王美丽', '焦隽峰'];
+  const TEST_USERS = ['王美丽', '焦隽峰', '曾慧琴'];
 
   function exportToCsv(filename, rows) {
     const processRow = function (row) {
@@ -134,13 +134,13 @@
     const taskItem = taskDomList[0].querySelector('.task-list-item');
     const taskInput = taskItem.querySelector('input');
     task.checked = taskInput.checked;
-    task.description = taskInput.nextSibling.textContent.trim();
-    const idMatchResult = task.description.match(/^(\d+)\.?/);
+    task.description = taskItem.textContent.trim().replace(/\n/g, ' ');
+    const idMatchResult = task.description.match(/^(\d+)[.．、]?/);
     if (idMatchResult) {
       task.id = idMatchResult[1];
-      task.description = task.description.replace(/^(\d+)\./, '').trim();
+      task.description = task.description.replace(/^(\d+)[.．、]/, '').trim();
     }
-    const priorityPattern = /([ABCD]).*bug/;
+    const priorityPattern = /([ABCD]).*[Bb][Uu][Gg]\b/;
     const matchResult = commentWrapper.querySelector('.note-body').textContent.match(priorityPattern);
     if (matchResult) {
       task.priority = matchResult[1];
@@ -220,7 +220,11 @@
 
   function scrollToNote(noteID) {
     if (noteID) {
-      document.getElementById(noteID).scrollIntoView({ block: 'center' });
+      if (location.hash.slice(1) !== noteID) {
+        location.hash = "#" + noteID;
+      } else {
+        document.getElementById(noteID).scrollIntoView({ block: 'center' });
+      }
     }
   }
 
