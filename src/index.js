@@ -140,7 +140,7 @@
       task.id = idMatchResult[1];
       task.description = task.description.replace(/^(\d+)[.．、]/, '').trim();
     }
-    const priorityPattern = /([ABCD]).*bug/;
+    const priorityPattern = /([ABCD]).*[Bb][Uu][Gg]\b/;
     const matchResult = commentWrapper.querySelector('.note-body').textContent.match(priorityPattern);
     if (matchResult) {
       task.priority = matchResult[1];
