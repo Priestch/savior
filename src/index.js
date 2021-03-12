@@ -7,13 +7,30 @@
 // @author       Priestch
 // @match        https://gitpd.paodingai.com/*/issues/*
 // @grant        GM_addStyle
+// @grant        unsafeWindow
 // @downloadURL  https://github.com/Priestch/savior/blob/master/src/index.js
 // ==/UserScript==
 
 (function () {
   'use strict';
 
-  const TEST_USERS = ['王美丽', '焦隽峰'];
+  const ADMIN_KEY = 'SUPER_TEST_USERS';
+  const issueHelper = {
+    addTestUser(username) {
+      const users = localStorage.getItem(ADMIN_KEY) || [];
+      users.push(username);
+
+      localStorage.setItem(ADMIN_KEY, users);
+    },
+    setTestUsers(usernames) {
+      localStorage.setItem(ADMIN_KEY, usernames);
+    },
+    getTestUsers() {
+      return localStorage.getItem(ADMIN_KEY) || ['王美丽', '焦隽峰'];
+    }
+  };
+
+  const TEST_USERS = issueHelper.getTestUsers();
 
   function exportToCsv(filename, rows) {
     const processRow = function (row) {
@@ -394,4 +411,6 @@
     const nodeList = document.querySelector('#notes-list')
     observer.observe(nodeList, { subtree: true, childList: true, attributes: true });
   }
+
+  unsafeWindow.$issueHelper = issueHelper;
 })();
