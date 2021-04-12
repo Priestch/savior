@@ -170,7 +170,7 @@
   }
 
   function addReplies(task) {
-    let replyList = task.domWrapper.querySelectorAll('.replies-toggle ~ .timeline-entry.note.qa-noteable-note-item');
+    let replyList = task.domWrapper.querySelectorAll('.replies-toggle ~ .timeline-entry.note.note-wrapper');
     task.replies = Array.from(replyList).map(getReply);
   }
 
