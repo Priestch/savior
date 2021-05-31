@@ -388,7 +388,9 @@
 
   createMenu();
 
-  const MAX_CONTINUOUS_MUTATION_INTERVAL = 5000;
+  const intervalKey = 'MAX_MUTATION_INTERVAL';
+  const customInterval = localStorage.getItem(intervalKey);
+  const mutationInterval = customInterval ? parseInt(customInterval) : 10 * 1e3;
   const URLMatchResult = window.location.hash.match(/#(note_\d+)/);
   if (URLMatchResult) {
     let timeoutID = null;
@@ -403,7 +405,7 @@
             scrollToNoteInURL(URLMatchResult);
             observer.disconnect();
           })
-        }, MAX_CONTINUOUS_MUTATION_INTERVAL);
+        }, mutationInterval);
       });
     }
 
