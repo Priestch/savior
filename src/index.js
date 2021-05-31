@@ -398,7 +398,7 @@
         if (timeoutID) {
           clearTimeout(timeoutID);
         }
-        setTimeout(function() {
+        timeoutID = setTimeout(function() {
           requestAnimationFrame(() => {
             scrollToNoteInURL(URLMatchResult);
             observer.disconnect();
