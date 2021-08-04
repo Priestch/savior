@@ -143,7 +143,7 @@
       return null
     }
     const task = createTask(timelineContent);
-    task.author = timelineContent.querySelector('.note-header .note-header-author-name').textContent.trim();
+    task.author = timelineContent.querySelector('.note-header .note-header-author-name').textContent;
     task.link = parseLink(timelineContent);
     if (taskDomList.length > 1) {
       console.error(formatTask(task));
@@ -207,7 +207,7 @@
     let noteHeaderSelector = '.timeline-entry-inner .timeline-content .note-header';
     let noteHeaderDom = replayDom.querySelector(noteHeaderSelector);
     return {
-      author: noteHeaderDom.querySelector('.note-header-author-name').textContent,
+      author: noteHeaderDom.querySelector('.note-header-author-name').textContent.trim(),
       content: replayDom.querySelector(noteContentSelector).textContent
     }
   }
