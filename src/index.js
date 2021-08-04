@@ -143,7 +143,7 @@
       return null
     }
     const task = createTask(timelineContent);
-    task.author = timelineContent.querySelector('.note-header .note-header-author-name').textContent;
+    task.author = timelineContent.querySelector('.note-header .note-header-author-name').textContent.trim();
     task.link = parseLink(timelineContent);
     if (taskDomList.length > 1) {
       console.error(formatTask(task));
