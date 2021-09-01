@@ -280,9 +280,18 @@
     return `${Array((length + 1) - s.length).join(pad)}${string}`;
   }
 
-  function parseProject() {
-    let prefix = window.location.protocol + '//' + window.location.hostname + '/cheftin/';
-    return window.location.href.replace(prefix, '').split('/')[0];
+  function parseContext() {
+    let prefix = window.location.protocol + '//' + window.location.hostname + '/';
+    const parts = window.location.href.replace(prefix, '').split('/');
+    const name = parts[1];
+    const nameParts = name.split('_');
+    return {
+      group: parts[0],
+      projectName: name.startsWith('docs_') ? nameParts[1] : name,
+      issue: {
+        id: parts[parts.length - 1]
+      }
+    };
   }
 
   function generateFilename() {
@@ -290,7 +299,9 @@
     const year = now.getFullYear();
     const month = padStart(now.getMonth() + 1, 2, '0');
     const day = padStart(`${now.getDate()}`, 2, '0');
-    return `${year}_${month}_${day}_${parseProject()}.csv`
+    const context = parseContext();
+    // return `${year}_${month}_${day}_${context.projectName}.csv`
+    return `${context.projectName}_${context.issue.id}.csv`
   }
 
   function exportAsCSV() {
