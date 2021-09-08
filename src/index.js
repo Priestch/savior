@@ -15,6 +15,7 @@
   'use strict';
 
   const ADMIN_KEY = 'SUPER_TEST_USERS';
+  const EXPORT_FORMAT = 'GITLAB_ISSUE_EXPORT_FILENAME_FORMAT';
   const issueHelper = {
     addTestUser(username) {
       const users = localStorage.getItem(ADMIN_KEY) || [];
@@ -27,6 +28,12 @@
     },
     getTestUsers() {
       return localStorage.getItem(ADMIN_KEY) || ['王美丽', '焦隽峰'];
+    },
+    setExportFormat(format) {
+      localStorage.setItem(EXPORT_FORMAT, format);
+    },
+    getExportFormat() {
+      return localStorage.getItem(EXPORT_FORMAT) || '${projectName}_${issue.id}.csv';
     }
   };
 
@@ -280,28 +287,58 @@
     return `${Array((length + 1) - s.length).join(pad)}${string}`;
   }
 
+  function parseIssueTitle() {
+    const titleElement = document.querySelector('.detail-page-description .title');
+    return titleElement ? titleElement.textContent : '';
+  }
+
   function parseContext() {
     let prefix = window.location.protocol + '//' + window.location.hostname + '/';
     const parts = window.location.href.replace(prefix, '').split('/');
     const name = parts[1];
     const nameParts = name.split('_');
-    return {
-      group: parts[0],
-      projectName: name.startsWith('docs_') ? nameParts[1] : name,
-      issue: {
-        id: parts[parts.length - 1]
-      }
-    };
-  }
-
-  function generateFilename() {
     const now = new Date();
     const year = now.getFullYear();
     const month = padStart(now.getMonth() + 1, 2, '0');
     const day = padStart(`${now.getDate()}`, 2, '0');
+    return {
+      group: parts[0],
+      projectName: name.startsWith('docs_') ? nameParts[1] : name,
+      issue: {
+        id: parts[parts.length - 1].split('#')[0],
+        title: parseIssueTitle(),
+      },
+      year,
+      month,
+      day,
+    };
+  }
+
+  function getValue(path, context) {
+    const parts = path.split('.');
+    let value = context;
+    parts.forEach((part) => {
+      value = value[part]
+    })
+
+    return value;
+  }
+
+  function formatFilename(context, format) {
+    const matches = format.match(/\$\{.+?\}/g);
+    let filename = format;
+    matches.forEach((matchStr) => {
+      const result = matchStr.match(/\$\{(?<path>.+)\}/);
+      const path = result.groups.path;
+      filename = filename.replace(matchStr, getValue(path, context))
+    })
+
+    return filename;
+  }
+
+  function generateFilename(format) {
     const context = parseContext();
-    // return `${year}_${month}_${day}_${context.projectName}.csv`
-    return `${context.projectName}_${context.issue.id}.csv`
+    return formatFilename(context, format);
   }
 
   function exportAsCSV() {
@@ -323,7 +360,7 @@
       }
       rows.push(row);
     }
-    let filename = generateFilename();
+    let filename = generateFilename(issueHelper.getExportFormat());
     exportToCsv(filename, rows)
   }
 
