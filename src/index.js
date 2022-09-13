@@ -2,7 +2,7 @@
 // @name         Gitlab Issues Track
 // @namespace    http://tampermonkey.net/
 // @homepage     https://github.com/Priestch/savior
-// @version      0.3.12
+// @version      0.3.13
 // @description  Savior of bug track in Gitlab issue!
 // @author       Priestch
 // @match        https://gitpd.paodingai.com/*/issues/*
@@ -177,7 +177,7 @@
   }
 
   function addReplies(task) {
-    let replyList = task.domWrapper.querySelectorAll('.replies-toggle ~ .timeline-entry.note.note-wrapper');
+    let replyList = task.domWrapper.querySelectorAll('.notes > .timeline-entry.note.note-wrapper');
     task.replies = Array.from(replyList).map(getReply);
   }
 
