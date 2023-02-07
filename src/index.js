@@ -436,30 +436,34 @@
 
   createMenu();
 
-  const intervalKey = 'MAX_MUTATION_INTERVAL';
-  const customInterval = localStorage.getItem(intervalKey);
-  const mutationInterval = customInterval ? parseInt(customInterval) : 10 * 1e3;
+  // const intervalKey = 'MAX_MUTATION_INTERVAL';
+  // const customInterval = localStorage.getItem(intervalKey);
+  // const mutationInterval = customInterval ? parseInt(customInterval) : 10 * 1e3;
   const URLMatchResult = window.location.hash.match(/#(note_\d+)/);
   if (URLMatchResult) {
-    let timeoutID = null;
-    let observer;
-    function handleMutations(records) {
-      records.forEach((record) => {
-        if (timeoutID) {
-          clearTimeout(timeoutID);
-        }
-        timeoutID = setTimeout(function() {
-          requestAnimationFrame(() => {
-            scrollToNoteInURL(URLMatchResult);
-            observer.disconnect();
-          })
-        }, mutationInterval);
-      });
-    }
+    /**
+     * It seems Gitlab can jump to right note in URL, it took so long!
+     */
 
-    observer = new MutationObserver(handleMutations);
-    const nodeList = document.querySelector('#notes-list')
-    observer.observe(nodeList, { subtree: true, childList: true, attributes: true });
+    // let timeoutID = null;
+    // let observer;
+    // function handleMutations(records) {
+    //   records.forEach((record) => {
+    //     if (timeoutID) {
+    //       clearTimeout(timeoutID);
+    //     }
+    //     timeoutID = setTimeout(function() {
+    //       requestAnimationFrame(() => {
+    //         scrollToNoteInURL(URLMatchResult);
+    //         observer.disconnect();
+    //       })
+    //     }, mutationInterval);
+    //   });
+    // }
+    //
+    // observer = new MutationObserver(handleMutations);
+    // const nodeList = document.querySelector('#notes-list')
+    // observer.observe(nodeList, { subtree: true, childList: true, attributes: true });
   }
 
   unsafeWindow.$issueHelper = issueHelper;
