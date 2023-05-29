@@ -182,7 +182,7 @@
   }
 
   function parseLink(timelineContent) {
-    const actions = timelineContent.querySelector('.note-header .note-actions .more-actions-dropdown');
+    const actions = timelineContent.querySelector('.note-header .note-actions .more-actions.dropdown');
     const actionList = actions.querySelectorAll('li .js-btn-copy-note-link');
     return actionList[0].dataset.clipboardText
   }
