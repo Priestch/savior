@@ -365,12 +365,12 @@
   }
 
   function createMenu() {
-    const descContainer = document.querySelector('.detail-page-description');
+    const descContainer = document.querySelector('.top-bar-fixed');
     const fixMenu = document.createElement('div');
-    fixMenu.classList.add("issue-sticky-header", "gl-fixed");
+    fixMenu.classList.add("gl-fixed");
 
     const saviorBox = document.createElement('div');
-    saviorBox.classList.add("issue-sticky-header-text", "gl-mx-auto", "savior");
+    saviorBox.classList.add("savior");
 
     const menuDom = document.createElement('div');
     menuDom.classList.add('savior-menu');
@@ -409,7 +409,7 @@
   }
 
   .savior-menu {
-    top: 56px;
+    top: 20px;
     left: 100%;
     position: absolute;
     width: 46px;
