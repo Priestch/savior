@@ -34,7 +34,7 @@
     },
     getExportFormat() {
       return localStorage.getItem(EXPORT_FORMAT) || '${projectName}_${issue.id}.csv';
-    }
+    },
   };
 
   const TEST_USERS = issueHelper.getTestUsers();
@@ -138,12 +138,12 @@
       domWrapper,
       id: '',
       replies: [],
-      confirmChecked: false
+      confirmChecked: false,
     };
   }
 
   function parseTask(taskContainer) {
-    const timelineContent = taskContainer.querySelector('.timeline-entry-inner .timeline-content');
+    const timelineContent = taskContainer.querySelector('.timeline .timeline-entry-inner .timeline-content');
     const commentWrapper = timelineContent.querySelector('.timeline-discussion-body');
     const taskDomList = commentWrapper.querySelectorAll('.note-body .task-list');
     if (taskDomList.length === 0) {
@@ -165,10 +165,14 @@
       task.description = task.description.replace(/^(\d+)\./, '').trim();
     }
     const priorityPattern = /([ABCD]).*bug/;
-    const matchResult = commentWrapper.querySelector('.note-body').textContent.match(priorityPattern);
-    if (matchResult) {
-      task.priority = matchResult[1];
+    const noteCommentEl = taskContainer.querySelector('.note-comment');
+    if (noteCommentEl) {
+      const matchResult = noteCommentEl.textContent.match(priorityPattern)
+      if (matchResult) {
+        task.priority = matchResult[1];
+      }
     }
+
     addReplies(task);
     if (confirmedByTestUser(task)) {
       task.confirmChecked = true;
@@ -177,18 +181,18 @@
   }
 
   function addReplies(task) {
-    let replyList = task.domWrapper.querySelectorAll('.notes > .timeline-entry.note.note-wrapper');
+    let replyList = task.domWrapper.querySelectorAll('.toggle-replies-widget .note-comment');
     task.replies = Array.from(replyList).map(getReply);
   }
 
   function parseLink(timelineContent) {
-    const actions = timelineContent.querySelector('.note-header .note-actions .more-actions.dropdown');
-    const actionList = actions.querySelectorAll('li .js-btn-copy-note-link');
+    const actions = timelineContent.querySelector('.note-header .note-actions div[title="More actions"]');
+    const actionList = actions.querySelectorAll('li[data-testid="copy-link-action"]');
     return actionList[0].dataset.clipboardText
   }
 
   function collectTasks() {
-    const noteList = document.querySelectorAll('#notes-list > .note:not(.system-note)');
+    const noteList = document.querySelectorAll('.main-notes-list > .note:not(.system-note)');
     const filtered = Array.from(noteList).filter((item) => item.querySelector('.timeline-entry-inner .timeline-content'));
     const tasks = [];
 
@@ -210,12 +214,12 @@
   }
 
   function getReply(replayDom) {
-    let noteContentSelector = '.timeline-entry-inner .timeline-content .timeline-discussion-body .note-body .note-text';
-    let noteHeaderSelector = '.timeline-entry-inner .timeline-content .note-header';
+    let noteContentSelector = '.timeline-content .note-body .note-text';
+    let noteHeaderSelector = '.timeline-content .note-header';
     let noteHeaderDom = replayDom.querySelector(noteHeaderSelector);
     return {
       author: noteHeaderDom.querySelector('.note-header-author-name').textContent.trim(),
-      content: replayDom.querySelector(noteContentSelector).textContent
+      content: replayDom.querySelector(noteContentSelector).textContent,
     }
   }
 
@@ -257,16 +261,16 @@
   function scrollToClipboardNote() {
     navigator.clipboard.readText().then(clipText => {
       if (clipText.startsWith('http')) {
-      let url = new URL(clipText);
-      if (url.hash) {
-        const noteID = url.hash.replace('#', '');
-        scrollToNote(noteID);
+        let url = new URL(clipText);
+        if (url.hash) {
+          const noteID = url.hash.replace('#', '');
+          scrollToNote(noteID);
+        }
       }
-    }
     });
   }
 
-  function scrollToUrlNote(){
+  function scrollToUrlNote() {
     const URLNote = window.location.hash.match(/#(note_\d+)/);
     if (URLNote) {
       scrollToNoteInURL(URLNote);
