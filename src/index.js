@@ -408,7 +408,7 @@
     document.addEventListener('mousemove', function (e) {
       if (isDragging) {
         e.preventDefault();
-        currentX = e.clientX - initialX;
+        currentX = (e.clientX - initialX) <= 0 ? 0 : (e.clientX - initialX);
         currentY = e.clientY - initialY;
 
         // Use requestAnimationFrame to throttle DOM updates
