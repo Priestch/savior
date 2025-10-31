@@ -376,6 +376,12 @@
     exportToCsv(filename, rows)
   }
 
+  function getRootFontSize() {
+    const rootElement = document.documentElement; // This targets the <html> element
+    const computedStyle = getComputedStyle(rootElement);
+    return parseInt(computedStyle.fontSize)
+  }
+
   function makeDraggable(element, handle) {
     let isDragging = false;
     let currentX;
@@ -383,6 +389,7 @@
     let initialX;
     let initialY;
     let animationFrameId = null;
+    let rootFontSize = 16
 
     // Load saved position
     const savedPosition = issueHelper.getMenuPosition();
@@ -398,6 +405,7 @@
     }
 
     handle.addEventListener('mousedown', function (e) {
+      rootFontSize = getRootFontSize();
       isDragging = true;
       initialX = e.clientX - (parseInt(element.style.left) || 0);
       initialY = e.clientY - (parseInt(element.style.top) || 0);
@@ -406,10 +414,25 @@
     });
 
     document.addEventListener('mousemove', function (e) {
+      const rem15 = rootFontSize * 15;
+      const maxWidth = window.innerWidth - rem15 - 100;
       if (isDragging) {
         e.preventDefault();
-        currentX = (e.clientX - initialX) <= 0 ? 0 : (e.clientX - initialX);
-        currentY = e.clientY - initialY;
+        const realtimeX = e.clientX - initialX;
+        if (realtimeX <= 0) {
+          currentX = 0;
+        } else if (realtimeX > maxWidth) {
+          currentX = maxWidth;
+        } else {
+          currentX = realtimeX;
+        }
+
+        const realtimeY = e.clientY - initialY;
+        if (realtimeY <= 0) {
+          currentY = 0;
+        } else {
+          currentY = realtimeY;
+        }
 
         // Use requestAnimationFrame to throttle DOM updates
         if (animationFrameId === null) {
