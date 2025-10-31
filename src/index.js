@@ -16,6 +16,7 @@
 
   const ADMIN_KEY = 'SUPER_TEST_USERS';
   const EXPORT_FORMAT = 'GITLAB_ISSUE_EXPORT_FILENAME_FORMAT';
+  const MENU_POSITION_KEY = 'GITLAB_ISSUE_MENU_POSITION';
   const issueHelper = {
     addTestUser(username) {
       const users = localStorage.getItem(ADMIN_KEY) || [];
@@ -34,6 +35,13 @@
     },
     getExportFormat() {
       return localStorage.getItem(EXPORT_FORMAT) || '${projectName}_${issue.id}.csv';
+    },
+    setMenuPosition(position) {
+      localStorage.setItem(MENU_POSITION_KEY, JSON.stringify(position));
+    },
+    getMenuPosition() {
+      const saved = localStorage.getItem(MENU_POSITION_KEY);
+      return saved ? JSON.parse(saved) : null;
     },
   };
 
@@ -368,6 +376,68 @@
     exportToCsv(filename, rows)
   }
 
+  function makeDraggable(element, handle) {
+    let isDragging = false;
+    let currentX;
+    let currentY;
+    let initialX;
+    let initialY;
+    let animationFrameId = null;
+
+    // Load saved position
+    const savedPosition = issueHelper.getMenuPosition();
+    if (savedPosition) {
+      element.style.left = savedPosition.x + 'px';
+      element.style.top = savedPosition.y + 'px';
+    }
+
+    function updatePosition() {
+      element.style.left = currentX + 'px';
+      element.style.top = currentY + 'px';
+      animationFrameId = null;
+    }
+
+    handle.addEventListener('mousedown', function (e) {
+      isDragging = true;
+      initialX = e.clientX - (parseInt(element.style.left) || 0);
+      initialY = e.clientY - (parseInt(element.style.top) || 0);
+
+      element.classList.add('dragging');
+    });
+
+    document.addEventListener('mousemove', function (e) {
+      if (isDragging) {
+        e.preventDefault();
+        currentX = e.clientX - initialX;
+        currentY = e.clientY - initialY;
+
+        // Use requestAnimationFrame to throttle DOM updates
+        if (animationFrameId === null) {
+          animationFrameId = requestAnimationFrame(updatePosition);
+        }
+      }
+    });
+
+    document.addEventListener('mouseup', function () {
+      if (isDragging) {
+        isDragging = false;
+        element.classList.remove('dragging');
+
+        // Cancel any pending animation frame
+        if (animationFrameId !== null) {
+          cancelAnimationFrame(animationFrameId);
+          animationFrameId = null;
+        }
+
+        // Save position
+        issueHelper.setMenuPosition({
+          x: parseInt(element.style.left) || 0,
+          y: parseInt(element.style.top) || 0,
+        });
+      }
+    });
+  }
+
   function createMenu() {
     const descContainer = document.querySelector('.top-bar-fixed');
     const fixMenu = document.createElement('div');
@@ -375,6 +445,13 @@
 
     const saviorBox = document.createElement('div');
     saviorBox.classList.add("savior");
+
+    // Add drag handle
+    const dragHandle = document.createElement('div');
+    dragHandle.classList.add('savior-drag-handle');
+    dragHandle.textContent = '☰';
+    dragHandle.setAttribute('title', '拖动菜单');
+    saviorBox.appendChild(dragHandle);
 
     const menuDom = document.createElement('div');
     menuDom.classList.add('savior-menu');
@@ -391,6 +468,9 @@
     saviorBox.appendChild(menuDom);
     fixMenu.appendChild(saviorBox);
     descContainer.appendChild(fixMenu);
+
+    // Make the savior box draggable by the handle
+    makeDraggable(saviorBox, dragHandle);
   }
 
   GM_addStyle(`
@@ -399,7 +479,7 @@
     background-color: #67c23a;
     overflow: hidden;
   }
-  
+
   .notes .note .timeline-content.collapse-item * {
     background-color: #67c23a;
   }
@@ -407,15 +487,36 @@
   .notes-list .note .timeline-content.highest-level-bug:not(.collapse-item) {
     background: #f56c6c;
   }
-  
+
   .savior {
     position: relative;
+    user-select: none;
+  }
+
+  .savior.dragging {
+    opacity: 0.8;
+    cursor: grabbing;
+  }
+
+  .savior-drag-handle {
+    width: 46px;
+    height: 24px;
+    background-color: #d0d1d2;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    border-radius: 3px 3px 0 0;
+    cursor: move;
+  }
+
+  .savior-drag-handle:hover {
+    background-color: #c0c1c2;
   }
 
   .savior-menu {
-    top: 20px;
-    left: 100%;
-    position: absolute;
+    position: relative;
     width: 46px;
     display: inline-flex;
     flex-direction: column;
@@ -430,6 +531,7 @@
     padding: 5px 10px;
     border: none;
     box-shadow: 0 0 0 1px transparent inset, 0 0 0 0 rgba(34,36,38,.15) inset;
+    cursor: pointer;
   }
 
   .savior-menu button:hover {
