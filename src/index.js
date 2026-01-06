@@ -259,22 +259,51 @@
     }
   }
 
+  function updateCollapseButtonState() {
+    const button = document.querySelector('.savior-btn-collapse');
+    if (!button) return;
+    const hasCollapsed = document.querySelector('.note.collapse-item');
+    button.textContent = hasCollapsed ? '展开' : '折叠';
+    button.setAttribute('title', hasCollapsed ? '展开所有已折叠的评论' : '折叠已完成的评论');
+  }
+
   function collapseGitlabNotes() {
-    const tasks = collectTasks();
-    for (let i = 0; i < tasks.length; i++) {
-      const task = tasks[i];
-      if (task.checked || task.confirmChecked) {
-        task.domWrapper.classList.add('collapse-item')
-      }
-      if (task.priority === 'A') {
-        task.domWrapper.classList.add('highest-level-bug');
+    const collapsedNotes = document.querySelectorAll('.note.collapse-item');
+    if (collapsedNotes.length > 0) {
+      collapsedNotes.forEach(note => note.classList.remove('collapse-item'));
+    } else {
+      const tasks = collectTasks();
+      for (let i = 0; i < tasks.length; i++) {
+        const task = tasks[i];
+        if (task.checked || task.confirmChecked) {
+          task.domWrapper.classList.add('collapse-item');
+        }
+        if (task.priority === 'A') {
+          task.domWrapper.classList.add('highest-level-bug');
+        }
       }
     }
+    updateCollapseButtonState();
+  }
+
+  function initCollapseEvent() {
+    document.addEventListener('click', (e) => {
+      const note = e.target.closest('.note.collapse-item');
+      if (note) {
+        note.classList.remove('collapse-item');
+        updateCollapseButtonState();
+      }
+    }, true);
   }
 
   function scrollToNote(noteID) {
     if (noteID) {
-      document.getElementById(noteID).scrollIntoView({ block: 'center' });
+      const el = document.getElementById(noteID);
+      if (el) {
+        document.querySelectorAll('.note.highlighted').forEach(n => n.classList.remove('highlighted'));
+        el.scrollIntoView({ block: 'center' });
+        el.classList.add('highlighted');
+      }
     }
   }
 
@@ -303,10 +332,11 @@
     }
   }
 
-  function createMenuItem(content, title, handler) {
+  function createMenuItem(content, title, handler, className) {
     let button = document.createElement('button');
     button.textContent = content;
     button.setAttribute('title', title);
+    if (className) button.classList.add(className);
     button.addEventListener('click', handler);
     return button
   }
@@ -498,7 +528,7 @@
     menuDom.classList.add('savior-menu');
     const menuItems = [
       createMenuItem('导出', '导出CSV', exportAsCSV),
-      createMenuItem('折叠', '折叠评论', collapseGitlabNotes),
+      createMenuItem('折叠', '折叠已完成的评论', collapseGitlabNotes, 'savior-btn-collapse'),
       createMenuItem('跳转', '跳转至剪切版中的URL', scrollToClipboardNote),
       createMenuItem('Find', '跳转到URL锚点位置', scrollToUrlNote),
     ];
@@ -515,6 +545,26 @@
   }
 
   GM_addStyle(`
+  @keyframes savior-pulse {
+    0% { outline: 4px solid #409eff; }
+    50% { outline: 4px solid transparent; }
+    100% { outline: 4px solid #409eff; }
+  }
+
+  .notes .note.highlighted .timeline-avatar img,
+  .notes .note.highlighted .avatar {
+    animation: savior-pulse 1s 5;
+    outline: 4px solid #409eff;
+    outline-offset: 2px;
+    border-radius: 50%;
+    position: relative;
+    z-index: 10;
+  }
+
+  .notes .note.collapse-item {
+    cursor: pointer;
+  }
+
   .notes .note.collapse-item .timeline-content {
     height: 100px;
     background-color: #67c23a;
@@ -583,35 +633,7 @@
 
   createMenu();
 
-  // const intervalKey = 'MAX_MUTATION_INTERVAL';
-  // const customInterval = localStorage.getItem(intervalKey);
-  // const mutationInterval = customInterval ? parseInt(customInterval) : 10 * 1e3;
-  const URLMatchResult = window.location.hash.match(/#(note_\d+)/);
-  if (URLMatchResult) {
-    /**
-     * It seems Gitlab can jump to right note in URL, it took so long!
-     */
-
-    // let timeoutID = null;
-    // let observer;
-    // function handleMutations(records) {
-    //   records.forEach((record) => {
-    //     if (timeoutID) {
-    //       clearTimeout(timeoutID);
-    //     }
-    //     timeoutID = setTimeout(function() {
-    //       requestAnimationFrame(() => {
-    //         scrollToNoteInURL(URLMatchResult);
-    //         observer.disconnect();
-    //       })
-    //     }, mutationInterval);
-    //   });
-    // }
-    //
-    // observer = new MutationObserver(handleMutations);
-    // const nodeList = document.querySelector('#notes-list')
-    // observer.observe(nodeList, { subtree: true, childList: true, attributes: true });
-  }
+  initCollapseEvent();
 
   unsafeWindow.$issueHelper = issueHelper;
 })();
