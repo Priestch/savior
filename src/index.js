@@ -145,6 +145,7 @@
       body: '',
       priority: 'C',
       domWrapper,
+      discussionId: '',
       id: '',
       replies: [],
       confirmChecked: false,
@@ -160,6 +161,7 @@
     }
 
     const task = createTask(taskContainer);
+    task.discussionId = taskContainer.getAttribute('discussion-id') || '';
     task.author = taskContainer.querySelector('.note-header-author-name')?.textContent.trim() || '';
     task.link = taskContainer.querySelector('[data-testid="copy-link-action"]')?.dataset.clipboardText || '';
 
@@ -202,8 +204,40 @@
   }
 
   function addReplies(task) {
-    let replyList = task.domWrapper.querySelectorAll('.toggle-replies-widget .note-comment');
-    task.replies = Array.from(replyList).map(getReply);
+    if (!task.discussionId) {
+      task.replies = [];
+      return;
+    }
+
+    const replyList = Array.from(document.querySelectorAll(`[discussion-id="${task.discussionId}"]`))
+      .filter((replyDom) => replyDom !== task.domWrapper);
+    task.replies = replyList.map(getReply);
+  }
+
+  function getDiscussionRelatedNodes(task) {
+    const relatedNodes = [];
+    let current = task.domWrapper.nextElementSibling;
+
+    while (current) {
+      if (current.matches('[discussion-id]')) {
+        if (current.getAttribute('discussion-id') !== task.discussionId) {
+          break;
+        }
+        relatedNodes.push(current);
+        current = current.nextElementSibling;
+        continue;
+      }
+
+      if (current.matches('.toggle-replies-widget, .discussion-reply-holder')) {
+        relatedNodes.push(current);
+        current = current.nextElementSibling;
+        continue;
+      }
+
+      break;
+    }
+
+    return relatedNodes;
   }
 
   function parseLink(timelineContent) {
@@ -260,11 +294,17 @@
   }
 
   function collapseGitlabNotes() {
+    document.querySelectorAll('.collapse-item').forEach((node) => node.classList.remove('collapse-item'));
+    document.querySelectorAll('.collapse-reply-item').forEach((node) => node.classList.remove('collapse-reply-item'));
+    document.querySelectorAll('.highest-level-bug').forEach((node) => node.classList.remove('highest-level-bug'));
+
     const tasks = collectTasks();
     for (let i = 0; i < tasks.length; i++) {
       const task = tasks[i];
       if (task.checked || task.confirmChecked) {
-        task.domWrapper.classList.add('collapse-item')
+        task.domWrapper.classList.add('collapse-item');
+        const relatedNodes = getDiscussionRelatedNodes(task);
+        relatedNodes.forEach((node) => node.classList.add('collapse-reply-item'));
       }
       if (task.priority === 'A') {
         task.domWrapper.classList.add('highest-level-bug');
@@ -523,6 +563,10 @@
 
   .notes .note.collapse-item .timeline-content * {
     background-color: #67c23a;
+  }
+
+  .notes .collapse-reply-item {
+    display: none !important;
   }
 
   .notes-list .note.highest-level-bug:not(.collapse-item) .timeline-content {
